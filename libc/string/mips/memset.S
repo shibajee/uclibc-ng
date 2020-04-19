@@ -253,8 +253,15 @@ L(set0):
 	andi	t2,a3,(NSIZE-1)		/* word-unaligned address?          */
 	beq	t2,zero,L(aligned)	/* t2 is the unalignment count      */
 	PTR_SUBU a2,a2,t2
+#ifndef __mlxrlx
 	C_STHI	a1,0(a0)
 	PTR_ADDU a0,a0,t2
+#else /* __mlxrlx */
+	PTR_ADDU t1, a0, t2
+1:	PTR_ADDIU a0, 1
+	bne	a0, t1, 1b
+	sb	a1, -1(a0)
+#endif /* !__mlxrlx */
 #else /* R6_CODE */
 	andi	t2,a0,(NSIZE-1)
 	lapc	t9,L(atable)

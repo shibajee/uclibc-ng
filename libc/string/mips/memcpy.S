@@ -319,10 +319,19 @@ L(memcpy):
 	beq	a3,zero,L(aligned)	/* if a3=0, it is already aligned */
 	PTR_SUBU a2,a2,a3		/* a2 is the remining bytes count */
 
+#ifndef __mlxrlx
 	C_LDHI	t8,0(a1)
 	PTR_ADDU a1,a1,a3
 	C_STHI	t8,0(a0)
 	PTR_ADDU a0,a0,a3
+#else /* __mlxrlx */
+1:	lbu	t8, 0(a1)
+	PTR_SUBU a3, 1
+	sb	t8, 0(a0)
+	PTR_ADDIU a1, 1
+	bnez	a3, 1b
+	PTR_ADDIU a0, 1
+#endif /* !__mlxrlx */
 
 #else /* R6_CODE */
 
@@ -614,6 +623,7 @@ L(wcopy_loop):
 	move	a2,t8
 
 #ifndef R6_CODE
+#ifndef __mlxrlx
 /*
  * UNALIGNED case, got here with a3 = "negu a0"
  * This code is nearly identical to the aligned code above
@@ -804,6 +814,18 @@ L(ua_smallCopy_loop):
 
 	j	ra
 	nop
+#else /* __mlxrlx */
+L(unaligned):
+	lbu	v1,  0(a1)
+	PTR_SUBU a2,  a2, 1
+	sb	v1,  0(a0)
+	PTR_ADDIU a1,  a1, 1
+	bnez	a2,  L(unaligned)
+	PTR_ADDIU a0,  a0, 1
+
+	j	ra
+	nop
+#endif /* !__mlxrlx */
 
 #else /* R6_CODE */
 
